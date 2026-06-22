@@ -1,0 +1,20 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build results
+bin/
+obj/
+
+# NuGet
+*.nupkg
+packages/
+
+# Archivos de configuración sensibles
+appsettings.Development.json
+appsettings.Production.json
+
+# Sistema
+.DS_Store
+Thumbs.db
