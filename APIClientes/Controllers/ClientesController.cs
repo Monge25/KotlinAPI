@@ -42,8 +42,9 @@ namespace APIClientes.Controllers
             if (existing is null) return NotFound();
             existing.Clave = cliente.Clave;
             existing.Nombre = cliente.Nombre;
-            existing.Email = cliente.Email;
-            existing.Telefono = cliente.Telefono;
+            existing.Edad = cliente.Edad;
+            existing.FechaNacimiento = cliente.FechaNacimiento;
+            existing.FechaCreacion = cliente.FechaCreacion;
             await _db.SaveChangesAsync();
             return Ok(existing);
         }
