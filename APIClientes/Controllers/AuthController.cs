@@ -1,6 +1,7 @@
 ﻿using APIClientes.Data;
 using APIClientes.Enums;
 using APIClientes.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -82,6 +83,45 @@ namespace APIClientes.Controllers
             return Created($"api/auth/{nuevo.Id}", new { mensaje = "Usuario creado.", nuevo.Id });
         }
 
+        // PUT api/auth/usuarios/{id}
+        [HttpPut("usuarios/{id}")]
+        [Authorize]
+        public async Task<IActionResult> Actualizar(int id, [FromBody] ActualizarUsuarioRequest req)
+        {
+            var usuario = await _db.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario no encontrado." });
+
+            usuario.Nombre = req.Nombre.Trim();
+            usuario.Email = req.Email.Trim().ToLower();
+            usuario.Rol = (RolEnum)req.Rol;
+            usuario.EsActivo = req.EsActivo;
+
+            if (!string.IsNullOrWhiteSpace(req.Password))
+                usuario.Password = BCrypt.Net.BCrypt.HashPassword(req.Password);
+
+            await _db.SaveChangesAsync();
+            return Ok(new { mensaje = "Usuario actualizado." });
+        }
+
+        // GET api/auth/usuarios
+        [HttpGet("usuarios")]
+        [Authorize]
+        public async Task<IActionResult> GetUsuarios()
+        {
+            var usuarios = await _db.Usuarios
+                .Select(u => new {
+                    id = u.Id,
+                    nombre = u.Nombre,
+                    correo = u.Email,
+                    rol = (int)u.Rol,
+                    esActivo = u.EsActivo
+                })
+                .ToListAsync();
+
+            return Ok(usuarios);
+        }
+
         private string GenerarToken(Usuario usuario)
         {
             var claims = new[]
@@ -99,7 +139,7 @@ namespace APIClientes.Controllers
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(8),
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: creds
             );
 
@@ -113,5 +153,14 @@ namespace APIClientes.Controllers
         string Email,
         string Password,
         RolEnum Rol = RolEnum.OPERADOR   // rol por defecto
+    );
+
+    // DTO 
+    public record ActualizarUsuarioRequest(
+    string Nombre,
+    string Email,
+    int Rol,
+    bool EsActivo,
+    string? Password
     );
 }
