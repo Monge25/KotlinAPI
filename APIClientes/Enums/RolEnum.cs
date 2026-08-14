@@ -4,5 +4,6 @@
     {
         ADMINISTRADOR = 0,
         OPERADOR = 1,
+        CLIENTE = 2,
     }
 }

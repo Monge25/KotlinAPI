@@ -11,6 +11,8 @@ namespace APIClientes.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rutina> Rutinas { get; set; }
         public DbSet<Ejercicio> Ejercicios { get; set; }
+        public DbSet<SesionEntrenamiento> Sesiones { get; set; }
+        public DbSet<EjercicioCompletado> EjerciciosCompletados { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,6 +88,62 @@ namespace APIClientes.Data
                 e.Property(ej => ej.Notas).HasColumnName("notas");
                 e.Property(ej => ej.FechaCreacion).HasColumnName("fecha_creacion");
                 e.Property(ej => ej.EsActivo).HasColumnName("es_activo");
+            });
+            // ── SesionEntrenamiento ───────────────────────────────
+            modelBuilder.Entity<SesionEntrenamiento>(e =>
+            {
+                e.ToTable("sesiones_entrenamiento");
+                e.HasKey(s => s.Id);
+                e.Property(s => s.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                e.Property(s => s.UsuarioId).HasColumnName("usuario_id");
+                e.Property(s => s.RutinaId).HasColumnName("rutina_id");
+                e.Property(s => s.FechaProgramada).HasColumnName("fecha_programada");
+                e.Property(s => s.HoraProgramada).HasColumnName("hora_programada").HasMaxLength(5);
+                e.Property(s => s.Estado)
+                    .HasColumnName("estado")
+                    .HasColumnType("smallint")
+                    .HasConversion<short>();
+                e.Property(s => s.FechaInicio).HasColumnName("fecha_inicio");
+                e.Property(s => s.FechaFin).HasColumnName("fecha_fin");
+                e.Property(s => s.PorcentajeCompletado).HasColumnName("porcentaje_completado");
+                e.Property(s => s.FechaCreacion).HasColumnName("fecha_creacion");
+
+                // Relaciones
+                e.HasOne(s => s.Usuario)
+                    .WithMany()
+                    .HasForeignKey(s => s.UsuarioId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(s => s.Rutina)
+                    .WithMany()
+                    .HasForeignKey(s => s.RutinaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasMany(s => s.EjerciciosCompletados)
+                    .WithOne(ec => ec.Sesion)
+                    .HasForeignKey(ec => ec.SesionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ── EjercicioCompletado ───────────────────────────────
+            modelBuilder.Entity<EjercicioCompletado>(e =>
+            {
+                e.ToTable("ejercicios_completados");
+                e.HasKey(ec => ec.Id);
+                e.Property(ec => ec.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                e.Property(ec => ec.SesionId).HasColumnName("sesion_id");
+                e.Property(ec => ec.EjercicioId).HasColumnName("ejercicio_id");
+                e.Property(ec => ec.Completado).HasColumnName("completado");
+                e.Property(ec => ec.SeriesCompletadas).HasColumnName("series_completadas");
+                e.Property(ec => ec.RepeticionesCompletadas).HasColumnName("repeticiones_completadas");
+                e.Property(ec => ec.PesoUsado).HasColumnName("peso_usado").HasColumnType("decimal(8,2)");
+                e.Property(ec => ec.Notas).HasColumnName("notas");
+                e.Property(ec => ec.FechaCompletado).HasColumnName("fecha_completado");
+
+                e.HasOne(ec => ec.Ejercicio)
+                    .WithMany()
+                    .HasForeignKey(ec => ec.EjercicioId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
